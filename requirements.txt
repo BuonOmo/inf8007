@@ -1,2 +1,4 @@
 pyphen
 nltk
+coverage
+codeclimate-test-reporter
