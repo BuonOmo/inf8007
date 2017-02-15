@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from collections import defaultdict
-from locale import setlocale
 
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
