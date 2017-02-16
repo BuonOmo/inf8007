@@ -6,5 +6,5 @@ install:
   - 'python -m nltk.downloader "stopwords"'
 script: 'python -m unittest'
 after_success:
-  - 'coverage run test_td2.py'
+  - 'coverage run --include=\'./*\' test_td2.py'
   - 'codeclimate-test-reporter'
