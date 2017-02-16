@@ -1,6 +1,6 @@
 from os import listdir
 from os.path import isfile, join
-from unittest import TestCase
+from unittest import TestCase, main
 
 from td2 import Parser, parse_course, SearchEngine
 
@@ -53,3 +53,7 @@ class TestSearchEngine(TestCase):
 
     def test_search(self):
         self.assertTrue(isinstance(self.engine.search('INF0330'), dict))
+
+
+if __name__ == '__main__':
+    main()
