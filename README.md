@@ -1,4 +1,4 @@
-# INF8007 ![travis-ci](https://travis-ci.org/BuonOmo/inf8007.svg?branch=master) [![Code Climate](https://codeclimate.com/github/BuonOmo/inf8007/badges/gpa.svg)](https://codeclimate.com/github/BuonOmo/inf8007)
+# INF8007 [![travis-ci](https://travis-ci.org/BuonOmo/inf8007.svg?branch=master)](https://travis-ci.org/BuonOmo/inf8007) [![Code Climate](https://codeclimate.com/github/BuonOmo/inf8007/badges/gpa.svg)](https://codeclimate.com/github/BuonOmo/inf8007)
 
 Les labs d’inf8007.
 
