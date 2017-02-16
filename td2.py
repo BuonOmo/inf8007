@@ -58,10 +58,12 @@ class Parser:
         """ break string up into tokens """
         words = re.split(self.WORD_SEPARATOR, string.strip().lower())
         if remove_stop_words:
-            if stem:
-                return [self.stemmer.stem(word) for word in words if word not in self.stopwords]
-            return [word for word in words if word not in self.stopwords]
-        return [self.stemmer.stem(word) for word in words] if stem else list(words)
+            words = filter(lambda w: w not in self.stopwords, words)
+        if stem:
+            words = map(self.stemmer.stem, words)
+        # usage of map  and filter instead of array comprehension allows to iterate only once through
+        # the list
+        return list(words)
 
     def count_terms(self, list_):
         rv = defaultdict(lambda: 0)
