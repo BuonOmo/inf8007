@@ -1,7 +1,7 @@
 from os import listdir
 from os.path import isfile, join
 from unittest import TestCase, main
-
+from IPython.utils.capture import capture_output
 import td2
 
 COURSE_PATH = '02/sample'
@@ -23,8 +23,15 @@ class TestMisc(TestCase):
         self.assertFalse(parsed.verbose)
 
     def test_main(self):
-        self.assertIsNone(td2.main(COURSE_PATH, "INF8007", be_verbose=True))
-        self.assertIsNone(td2.main(COURSE_PATH, "INF8007", be_verbose=False))
+        with capture_output() as c_verbose:
+            td2.main(COURSE_PATH, "INF8007", be_verbose=True)
+            with open('02/tests/verbose_output') as f:
+                self.assertEqual(f.read(), c_verbose.stdout)
+
+        with capture_output() as c_quiet:
+            td2.main(COURSE_PATH, "INF8007", be_verbose=False)
+            with open('02/tests/quiet_output') as f:
+                self.assertEqual(f.read(), c_quiet.stdout)
 
     def test_parse_course(self):
         self.assertTupleEqual(('Langages de script',
