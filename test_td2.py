@@ -8,7 +8,24 @@ COURSE_PATH = '02/sample'
 FILES = [join(COURSE_PATH, f) for f in listdir(COURSE_PATH) if isfile(join(COURSE_PATH, f))]
 
 
-class TestUtils(TestCase):
+class TestMisc(TestCase):
+    def test_parse_arguments(self):
+        defaults = td2.parse_arguments()
+        self.assertEqual('INF8007', defaults.acronym)
+        self.assertEqual('02/PolyHEC', defaults.path)
+        self.assertEqual(10, defaults.length)
+        self.assertTrue(defaults.verbose)
+
+        parsed = td2.parse_arguments(str.split('-d a/path -n 42 --quiet LOG3430'))
+        self.assertEqual('LOG3430', parsed.acronym)
+        self.assertEqual('a/path', parsed.path)
+        self.assertEqual(42, parsed.length)
+        self.assertFalse(parsed.verbose)
+
+    def test_main(self):
+        self.assertIsNone(td2.main(COURSE_PATH, "INF8007", be_verbose=True))
+        self.assertIsNone(td2.main(COURSE_PATH, "INF8007", be_verbose=False))
+
     def test_parse_course(self):
         self.assertTupleEqual(('Langages de script',
                                "Caracteristiques des langages de script. Principaux langages et dom"
@@ -55,24 +72,6 @@ class TestSearchEngine(TestCase):
         self.assertEqual('INF1025', search_value[0][0])
         self.assertEqual(len(FILES) - 1, len(search_value))
 
-
-def test_parse_arguments():
-    defaults = td2.parse_arguments()
-    assert defaults.acronym == 'INF8007'
-    assert defaults.path == '02/PolyHEC'
-    assert defaults.length == 10
-    assert defaults.verbose
-
-    parsed = td2.parse_arguments(str.split('-d a/path -n 42 --quiet LOG3430'))
-    assert parsed.acronym == 'LOG3430'
-    assert parsed.path == 'a/path'
-    assert parsed.length == 42
-    assert not parsed.verbose
-
-
-def test_main():
-    assert td2.main(COURSE_PATH, "INF8007", be_verbose=True) is None
-    assert td2.main(COURSE_PATH, "INF8007", be_verbose=False) is None
 
 if __name__ == '__main__':
     main()
