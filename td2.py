@@ -16,7 +16,7 @@ from numpy.ma import dot
 
 
 # --------------------------------------------------------------------------------- argument parsing
-def parse_arguments():
+def parse_arguments(args_=None):
     def acronym(v):
         try:
             return re.match("^[A-Z]{3}\d{4}\w?$", v).group(0)
@@ -34,7 +34,7 @@ def parse_arguments():
     parser_verbose_handling.add_argument('-q', '--quiet', dest='verbose', action='store_false',
                                          help="Affiche le minimum d’informations")
     parser.set_defaults(acronym='INF8007', path='02/PolyHEC', length=10, verbose=True)
-    return parser.parse_args()
+    return parser.parse_args(args_)
 
 
 # -------------------------------------------------------------------------------------------- utils

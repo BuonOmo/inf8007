@@ -2,7 +2,7 @@ from os import listdir
 from os.path import isfile, join
 from unittest import TestCase, main
 
-from td2 import Parser, parse_course, SearchEngine
+import td2
 
 COURSE_PATH = '02/sample'
 FILES = [join(COURSE_PATH, f) for f in listdir(COURSE_PATH) if isfile(join(COURSE_PATH, f))]
@@ -16,10 +16,11 @@ class TestUtils(TestCase):
                                "axe, structures de controle, structures de donnees, communication i"
                                "nterprocessus et communication avec une base de donnees, modules cl"
                                "ients et serveurs."),
-                              parse_course(path=join(COURSE_PATH,'INF8007.txt')), msg="usual case")
+                              td2.parse_course(path=join(COURSE_PATH, 'INF8007.txt')),
+                              msg="usual case")
         not_found_error = False
         try:
-            parse_course(path='foobar')
+            td2.parse_course(path='foobar')
         except FileNotFoundError:
             not_found_error = True
 
@@ -27,7 +28,7 @@ class TestUtils(TestCase):
 
 
 class TestParser(TestCase):
-    parser = Parser('french')
+    parser = td2.Parser('french')
 
     def test_tokenize(self):
         self.assertEqual(['foo'], self.parser.tokenize('foo\n'), msg='string cleaning')
@@ -46,7 +47,7 @@ class TestParser(TestCase):
 
 
 class TestSearchEngine(TestCase):
-    engine = SearchEngine(language='french', files=FILES)
+    engine = td2.SearchEngine(language='french', files=FILES)
 
     def test_search(self):
         search_value = self.engine.search('INF0330')
@@ -54,6 +55,24 @@ class TestSearchEngine(TestCase):
         self.assertEqual('INF1025', search_value[0][0])
         self.assertEqual(len(FILES) - 1, len(search_value))
 
+
+def test_parse_arguments():
+    defaults = td2.parse_arguments()
+    assert defaults.acronym == 'INF8007'
+    assert defaults.path == '02/PolyHEC'
+    assert defaults.length == 10
+    assert defaults.verbose
+
+    parsed = td2.parse_arguments(str.split('-d a/path -n 42 --quiet LOG3430'))
+    assert parsed.acronym == 'LOG3430'
+    assert parsed.path == 'a/path'
+    assert parsed.length == 42
+    assert not parsed.verbose
+
+
+def test_main():
+    assert td2.main(COURSE_PATH, "INF8007", be_verbose=True) is None
+    assert td2.main(COURSE_PATH, "INF8007", be_verbose=False) is None
 
 if __name__ == '__main__':
     main()
