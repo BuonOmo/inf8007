@@ -29,23 +29,20 @@ class TestUtils(TestCase):
 class TestParser(TestCase):
     parser = Parser('french')
 
-    def test_tokenise(self):
-        self.assertEqual(['foo'], self.parser.tokenise('foo\n'), msg='string cleaning')
+    def test_tokenize(self):
+        self.assertEqual(['foo'], self.parser.tokenize('foo\n'), msg='string cleaning')
         self.assertEqual('jean va à la fontaine'.split(),
-                         self.parser.tokenise('Jean va à la fontaine', False, False),
+                         self.parser.tokenize('Jean va à la fontaine', False, False),
                          msg='normal use')
-        self.assertEqual(['siffl'], self.parser.tokenise('sifflement', False, True), msg='stemming')
+        self.assertEqual(['siffl'], self.parser.tokenize('sifflement', False, True), msg='stemming')
 
         self.assertEqual('jean va fontaine'.split(),
-                         self.parser.tokenise('Jean va à la fontaine', True, False),
+                         self.parser.tokenize('Jean va à la fontaine', True, False),
                          msg='removing stopwords')
 
         self.assertEqual('jean va fontain'.split(),
-                         self.parser.tokenise('Jean va à la fontaine', True, True),
+                         self.parser.tokenize('Jean va à la fontaine', True, True),
                          msg='removing stopwords and stemming')
-
-    def test_count_terms(self):
-        self.assertEqual(dict(foo=2, bar=1), self.parser.count_terms('foo foo bar'.split()))
 
 
 class TestSearchEngine(TestCase):

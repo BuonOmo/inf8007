@@ -60,7 +60,7 @@ class Parser:
         self.stopwords = set(stopwords.words(language))
         self.stemmer = SnowballStemmer(language=language)
 
-    def tokenise(self, string, remove_stop_words=False, stem=False):
+    def tokenize(self, string, remove_stop_words=False, stem=False):
         """ break string up into tokens """
         words = re.split(self.WORD_SEPARATOR, string.strip().lower())
         if remove_stop_words:
@@ -79,17 +79,17 @@ class SearchEngine:
         self.parser = Parser(language=language)
         # list of all uniq words, eventually optimised with stemming and stopwords sorting.
         all_words_string = ' '.join(parse_course(file)[1] for file in files)
-        word_list = set(self.parser.tokenise(all_words_string))
+        word_list = set(self.parser.tokenize(all_words_string))
         self.words_index = {word: index for (index, word) in enumerate(word_list)}
         self.vectors = {}
         for file in files:
             vector = [0] * len(self.words_index)
-            for word in self.parser.tokenise(parse_course(file)[1]):
+            for word in self.parser.tokenize(parse_course(file)[1]):
                 vector[self.words_index[word]] += 1
             self.vectors[basename(file)[:-4]] = vector
 
     @staticmethod
-    def __cosine(self, a, b):
+    def __cosine(a, b):
         return float(dot(a, b) / (norm(a) * norm(b)))
 
     def search(self, acronym, sort=True, reverse_sort=True):
