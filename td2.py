@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from collections import defaultdict
+from operator import itemgetter
 
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
@@ -66,7 +67,7 @@ class Parser:
         return list(words)
 
     def count_terms(self, list_):
-        rv = defaultdict(lambda: 0)
+        rv = defaultdict(int)
         for word in list_:
             rv[word] += 1
         return dict(rv)
@@ -91,10 +92,10 @@ class SearchEngine:
     def _cosine(self, a, b):
         return float(dot(a, b) / (norm(a) * norm(b)))
 
-    def search(self, acronym):
+    def search(self, acronym, sort=True, reverse_sort=True):
         search_vec = self.vectors[acronym]
-        return {acr: self._cosine(search_vec, other_vec) for (acr, other_vec) in
-                self.vectors.items() if acronym != acr}
+        rv = [(acr, self._cosine(search_vec, other_vec)) for (acr, other_vec) in self.vectors.items() if acronym != acr]
+        return sorted(rv, key=itemgetter(1), reverse=reverse_sort) if sort else rv
 
 
 # --------------------------------------------------------------------------------- main application
