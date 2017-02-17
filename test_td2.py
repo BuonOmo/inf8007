@@ -52,7 +52,10 @@ class TestSearchEngine(TestCase):
     engine = SearchEngine(language='french', files=FILES)
 
     def test_search(self):
-        self.assertTrue(isinstance(self.engine.search('INF0330'), dict))
+        search_value = self.engine.search('INF0330')
+        self.assertEqual(list, type(search_value))
+        self.assertEqual('INF1025', search_value[0][0])
+        self.assertEqual(len(FILES) - 1, len(search_value))
 
 
 if __name__ == '__main__':

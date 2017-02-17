@@ -11,4 +11,4 @@ after_success:
 cache:
   pip: true 
   directories:
-  - $HOME/nltk
+  - $HOME/nltk_data
