@@ -8,3 +8,7 @@ script: 'python -m unittest'
 after_success:
   - "coverage run --include='./*' test_td2.py"
   - 'codeclimate-test-reporter'
+cache:
+  pip: true 
+  directories:
+  - $HOME/nltk
