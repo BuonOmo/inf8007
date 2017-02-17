@@ -6,7 +6,7 @@ install:
   - 'python -m nltk.downloader "stopwords"'
 script: 'python -m unittest'
 after_success:
-  - 'test_coverage.sh'
+  - './test_coverage.sh'
 cache:
   pip: true 
   directories:
