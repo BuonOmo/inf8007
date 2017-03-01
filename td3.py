@@ -9,7 +9,8 @@ from collections import defaultdict
 import json
 
 
-def tree(): return defaultdict(tree)
+# this is used as json generator, see https://gist.github.com/hrldcpr/2012250
+def _tree(): return defaultdict(_tree)
 
 COURSE_PATH = '02/sample'
 FILES = [join(COURSE_PATH, f) for f in listdir(COURSE_PATH) if isfile(join(COURSE_PATH, f))]
@@ -29,9 +30,9 @@ class AppHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-        body = tree()
+        body = _tree()
         search_result = self.search_engine.search(args['acronym'], args['sort'])[:args['length']]
-        body['data'] = {acr:{'val': value, 'desc': self.search_engine.files[acr].original_content}
+        body['data'] = {acr: {'val': value, 'desc': self.search_engine.files[acr].original_content}
                         for acr, value in search_result}
         self.wfile.write(bytes(json.dumps(body), encoding="utf-8"))
 

@@ -57,11 +57,16 @@ def parse_course(path, do_raise=False):
 class Parser:
     WORD_SEPARATOR = r'(?:(?:&nbsp)?[\s.,:;?!()\\/\'\"])+'
 
-    def __init__(self, language='french'):
+    def __init__(self, language='french', default_remove_stopwords=False, default_stem=False):
         self.stopwords = set(stopwords.words(language))
         self.stemmer = SnowballStemmer(language=language)
+        self.default_remove_stopwords = default_remove_stopwords
+        self.default_stem = default_stem
 
-    def tokenize(self, string, remove_stop_words=False, stem=False):
+    def tokenize(self, string, remove_stop_words=None, stem=None):
+        remove_stop_words = self.default_remove_stopwords if remove_stop_words is None \
+                            else remove_stop_words
+        stem = self.default_stem if stem is None else stem
         """ break string up into tokens """
         words = re.split(self.WORD_SEPARATOR, string.strip().lower())
         if remove_stop_words:
@@ -76,13 +81,13 @@ class Parser:
 # ------------------------------------------------------------------------------------ search engine
 class SearchEngine:
     def __init__(self, files, language='french'):
-        self.parser = Parser(language=language)
+        self.parser = Parser(language=language, default_remove_stopwords=True, default_stem=True)
         # retrieve file contents and tokenize it
         ParsedFile = namedtuple('ParsedFile', 'title content original_content uniq_words')
         self.files = {}
         for file in files:
             title, original_content = parse_course(file)
-            content = self.parser.tokenize(original_content)
+            content = self.parser.tokenize(original_content) + self.parser.tokenize(title)
             self.files[basename(file)[:-4]] = ParsedFile(title, content, original_content,
                                                          set(content))
         # list of all uniq words, eventually optimised with stemming and stopwords sorting.
@@ -116,7 +121,6 @@ class SearchEngine:
 
 # --------------------------------------------------------------------------------- main application
 def main(path, acronym, n=10, be_verbose=True):
-    cols = get_terminal_size((80, 20)).columns
     title, description = parse_course(join(path, acronym + '.txt'))
     if be_verbose:
         print("Recherche des cours similaires au cours {0} ({1}):".format(acronym, title))
@@ -125,8 +129,8 @@ def main(path, acronym, n=10, be_verbose=True):
     for acr, score in search_result[:n]:
         if be_verbose:
             title, description = parse_course(join(path, acr + '.txt'))
-            print("  {acronym}: {title} (score={score})".format(acronym=acr, title=title,
-                                                                score=score).rjust(cols, '-'))
+            print(" - {acronym}: {title} (score={score})".format(acronym=acr, title=title,
+                                                                 score=score))
             print(description + "\n")
         else:
             print('{}: {}'.format(acr, score))
