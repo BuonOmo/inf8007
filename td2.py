@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-from collections import defaultdict
+from functools import reduce
+from collections import namedtuple
 from operator import itemgetter
 
 from shutil import get_terminal_size
@@ -75,18 +76,25 @@ class Parser:
 # ------------------------------------------------------------------------------------ search engine
 class SearchEngine:
     def __init__(self, files, language='french'):
-        self.files = files
         self.parser = Parser(language=language)
-        # list of all uniq words, eventually optimised with stemming and stopwords sorting.
-        all_words_string = ' '.join(parse_course(file)[1] for file in files)
-        word_list = set(self.parser.tokenize(all_words_string))
-        self.words_index = {word: index for (index, word) in enumerate(word_list)}
-        self.vectors = {}
+        # retrieve file contents and tokenize it
+        ParsedFile = namedtuple('ParsedFile', ['title', 'content', 'uniq_words'])
+        self.files = {}
         for file in files:
+            title, content = parse_course(file)
+            content = self.parser.tokenize(content)
+            self.files[basename(file)[:-4]] = ParsedFile(title, content, set(content))
+        # list of all uniq words, eventually optimised with stemming and stopwords sorting.
+        word_list = set(word for file in self.files.values() for word in file.uniq_words if word)
+        number_of_documents = len(files)
+        self.words_index = {word: {'i': index, 'idf': number_of_documents / self.__count_docs(word)}
+                            for (index, word) in enumerate(word_list)}
+        self.vectors = {}
+        for acronym, file in self.files.items():
             vector = [0] * len(self.words_index)
-            for word in self.parser.tokenize(parse_course(file)[1]):
-                vector[self.words_index[word]] += 1
-            self.vectors[basename(file)[:-4]] = vector
+            for word in file.content:
+                vector[self.words_index[word]['i']] += self.words_index[word]['idf']
+            self.vectors[acronym] = vector
 
     @staticmethod
     def __cosine(a, b):
@@ -97,6 +105,10 @@ class SearchEngine:
         rv = [(acr, self.__cosine(search_vec, other_vec)) for (acr, other_vec) in
               self.vectors.items() if acronym != acr]
         return sorted(rv, key=itemgetter(1), reverse=reverse_sort) if sort else rv
+
+    def __count_docs(self, word):
+        return reduce(lambda count, file: count + 1 if word in file.uniq_words else count,
+                      self.files.values(), 0)
 
 
 # --------------------------------------------------------------------------------- main application
