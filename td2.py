@@ -78,12 +78,13 @@ class SearchEngine:
     def __init__(self, files, language='french'):
         self.parser = Parser(language=language)
         # retrieve file contents and tokenize it
-        ParsedFile = namedtuple('ParsedFile', ['title', 'content', 'uniq_words'])
+        ParsedFile = namedtuple('ParsedFile', 'title content original_content uniq_words')
         self.files = {}
         for file in files:
-            title, content = parse_course(file)
-            content = self.parser.tokenize(content)
-            self.files[basename(file)[:-4]] = ParsedFile(title, content, set(content))
+            title, original_content = parse_course(file)
+            content = self.parser.tokenize(original_content)
+            self.files[basename(file)[:-4]] = ParsedFile(title, content, original_content,
+                                                         set(content))
         # list of all uniq words, eventually optimised with stemming and stopwords sorting.
         word_list = set(word for file in self.files.values() for word in file.uniq_words if word)
         number_of_documents = len(files)
@@ -93,6 +94,8 @@ class SearchEngine:
         for acronym, file in self.files.items():
             vector = [0] * len(self.words_index)
             for word in file.content:
+                if not word:
+                    continue
                 vector[self.words_index[word]['i']] += self.words_index[word]['idf']
             self.vectors[acronym] = vector
 
