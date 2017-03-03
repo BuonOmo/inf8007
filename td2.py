@@ -3,7 +3,6 @@ from functools import reduce
 from collections import namedtuple
 from operator import itemgetter
 
-from shutil import get_terminal_size
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 
@@ -67,8 +66,10 @@ class Parser:
         remove_stop_words = self.default_remove_stopwords if remove_stop_words is None \
                             else remove_stop_words
         stem = self.default_stem if stem is None else stem
-        """ break string up into tokens """
+        # break string up into tokens
         words = re.split(self.WORD_SEPARATOR, string.strip().lower())
+        # filter empty strings
+        words = filter(lambda w: bool(w), words)
         if remove_stop_words:
             words = filter(lambda w: w not in self.stopwords, words)
         if stem:
@@ -91,17 +92,17 @@ class SearchEngine:
             self.files[basename(file)[:-4]] = ParsedFile(title, content, original_content,
                                                          set(content))
         # list of all uniq words, eventually optimised with stemming and stopwords sorting.
-        word_list = set(word for file in self.files.values() for word in file.uniq_words if word)
+        word_list = set(word for file in self.files.values() for word in file.uniq_words)
         number_of_documents = len(files)
-        self.words_index = {word: {'i': index, 'idf': number_of_documents / self.__count_docs(word)}
+        # this next operation process idf for each word in the document, it can take a while.
+        self.words_index = {word: (index, number_of_documents / self.__count_docs(word))
                             for (index, word) in enumerate(word_list)}
         self.vectors = {}
         for acronym, file in self.files.items():
             vector = [0] * len(self.words_index)
             for word in file.content:
-                if not word:
-                    continue
-                vector[self.words_index[word]['i']] += self.words_index[word]['idf']
+                # we add idf each time we see a word, this ends up having tf*idf
+                vector[self.words_index[word][0]] += self.words_index[word][0]
             self.vectors[acronym] = vector
 
     @staticmethod
@@ -115,6 +116,7 @@ class SearchEngine:
         return sorted(rv, key=itemgetter(1), reverse=reverse_sort) if sort else rv
 
     def __count_docs(self, word):
+        """ Count in how many documents a word is present, used for the TF-IDF. """
         return reduce(lambda count, file: count + 1 if word in file.uniq_words else count,
                       self.files.values(), 0)
 
