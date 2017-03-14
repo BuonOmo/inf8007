@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from functools import reduce
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from operator import itemgetter
 
 from nltk.corpus import stopwords
@@ -52,6 +52,15 @@ def parse_course(path, do_raise=False):
     return title, description
 
 
+class Keydefaultdict(defaultdict):
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        else:
+            ret = self[key] = self.default_factory(key)
+            return ret
+
+
 # -------------------------------------------------------------------------------------- text parser
 class Parser:
     WORD_SEPARATOR = r'(?:(?:&nbsp)?[\s.,:;?!()\\/\'\"])+'
@@ -81,11 +90,13 @@ class Parser:
 
 # ------------------------------------------------------------------------------------ search engine
 class SearchEngine:
+    files = {}
+    vectors = {}
+
     def __init__(self, files, language='french'):
         self.parser = Parser(language=language, default_remove_stopwords=True, default_stem=True)
         # retrieve file contents and tokenize it
         ParsedFile = namedtuple('ParsedFile', 'title content original_content uniq_words')
-        self.files = {}
         for file in files:
             title, original_content = parse_course(file)
             content = self.parser.tokenize(original_content) + self.parser.tokenize(title)
@@ -97,26 +108,28 @@ class SearchEngine:
         # this next operation process idf for each word in the document, it can take a while.
         self.words_index = {word: (index, number_of_documents / self.__count_docs(word))
                             for (index, word) in enumerate(word_list)}
-        self.vectors = {}
         for acronym, file in self.files.items():
             vector = [0] * len(self.words_index)
             for word in file.content:
                 # we add idf each time we see a word, this ends up having tf*idf
                 vector[self.words_index[word][0]] += self.words_index[word][0]
             self.vectors[acronym] = vector
+        self.norms = Keydefaultdict(lambda acronym: norm(self.vectors[acronym]))
 
     @staticmethod
-    def __cosine(a, b):
-        return float(dot(a, b) / (norm(a) * norm(b)))
+    def __cosine(a, b, norm_a, norm_b):
+        return float(dot(a, b) / (norm_a * norm_b))
 
     def search(self, acronym, sort=True, reverse_sort=True):
         search_vec = self.vectors[acronym]
-        rv = [(acr, self.__cosine(search_vec, other_vec)) for (acr, other_vec) in
-              self.vectors.items() if acronym != acr]
+        search_norm = self.norms[acronym]
+        rv = [(acr, self.__cosine(search_vec, other_vec, search_norm, self.norms[acr]))
+              for (acr, other_vec) in self.vectors.items() if acronym != acr]
         return sorted(rv, key=itemgetter(1), reverse=reverse_sort) if sort else rv
 
     def __count_docs(self, word):
         """ Count in how many documents a word is present, used for the TF-IDF. """
+        # todo: move this to init loop
         return reduce(lambda count, file: count + 1 if word in file.uniq_words else count,
                       self.files.values(), 0)
 
