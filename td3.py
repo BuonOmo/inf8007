@@ -20,25 +20,34 @@ class AppHandler(BaseHTTPRequestHandler):
     search_engine = SearchEngine(FILES)
 
     def do_GET(self):
+        """
+        L’accession aux données se fait avec les paramètres suivant :
+         - acronym (REQUIS) — le sigle du cours
+         - sort — tri dans l’ordre décroissant des valeurs obtenues
+         - length — nombre d’elements
+        :return:
+        """
         query = urlparse(self.path).query
         args = dict(i.split('=') for i in query.split('&'))
-        if 'sort' not in args:
-            args['sort'] = True
-        if 'length' not in args:
-            args['length'] = 10
+        args['sort'] = bool(args['sort']) if 'sort' in args else True
+        args['length'] = int(args['length']) if 'length' in args else 10
         print(args)
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         body = _tree()
         search_result = self.search_engine.search(args['acronym'], args['sort'])[:args['length']]
-        body['data'] = {acr: {'val': value, 'desc': self.search_engine.files[acr].original_content}
-                        for acr, value in search_result}
+        body['data'] = [{'acr': acr, 'val': value, 'desc': self.search_engine.files[acr].original_content}
+                        for acr, value in search_result]
         self.wfile.write(bytes(json.dumps(body), encoding="utf-8"))
 
 
 def run():
+    print('Mise en place du serveur...')
     httpd = HTTPServer(('localhost', 8765), AppHandler)
+    print('Serveur accessible à l’adresse http://localhost:8765. '
+          'Appuyez sur ctrl-c pour interrompre.')
     httpd.serve_forever()
 
 if __name__ == '__main__':
