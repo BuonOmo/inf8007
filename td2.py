@@ -115,15 +115,19 @@ class SearchEngine:
                 vector[self.words_index[word][0]] += self.words_index[word][0]
             self.vectors[acronym] = vector
         self.norms = Keydefaultdict(lambda acronym: norm(self.vectors[acronym]))
+        self.cosines = Keydefaultdict(lambda acr_a: Keydefaultdict(lambda acr_b: self.__cosine(
+            self.vectors[acr_a],
+            self.vectors[acr_b],
+            self.norms[acr_a],
+            self.norms[acr_b]
+        )))
 
     @staticmethod
     def __cosine(a, b, norm_a, norm_b):
         return float(dot(a, b) / (norm_a * norm_b))
 
     def search(self, acronym, sort=True, reverse_sort=True):
-        search_vec = self.vectors[acronym]
-        search_norm = self.norms[acronym]
-        rv = [(acr, self.__cosine(search_vec, other_vec, search_norm, self.norms[acr]))
+        rv = [(acr, self.cosines[min(acr, acronym)][max(acr, acronym)])
               for (acr, other_vec) in self.vectors.items() if acronym != acr]
         return sorted(rv, key=itemgetter(1), reverse=reverse_sort) if sort else rv
 

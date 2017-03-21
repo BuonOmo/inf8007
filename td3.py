@@ -12,6 +12,8 @@ import json
 # this is used as json generator, see https://gist.github.com/hrldcpr/2012250
 def _tree(): return defaultdict(_tree)
 
+print('Mise en place du serveur...')
+
 COURSE_PATH = '02/sample'
 FILES = [join(COURSE_PATH, f) for f in listdir(COURSE_PATH) if isfile(join(COURSE_PATH, f))]
 
@@ -44,7 +46,6 @@ class AppHandler(BaseHTTPRequestHandler):
 
 
 def run():
-    print('Mise en place du serveur...')
     httpd = HTTPServer(('localhost', 8765), AppHandler)
     print('Serveur accessible à l’adresse http://localhost:8765. '
           'Appuyez sur ctrl-c pour interrompre.')

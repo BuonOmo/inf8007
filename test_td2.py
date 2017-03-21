@@ -10,7 +10,6 @@ FILES = [join(COURSE_PATH, f) for f in listdir(COURSE_PATH) if isfile(join(COURS
 
 
 class TestMisc(TestCase):
-    maxDiff = None
     def test_parse_arguments(self):
         defaults = td2.parse_arguments()
         self.assertEqual('INF8007', defaults.acronym)
